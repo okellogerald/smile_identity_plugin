@@ -1,6 +1,8 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.tembo_plus.smile_identity_plugin">
 
+     <uses-permission android:name="android.permission.CAMERA" />
+
     <application>
         <!-- Don't delete the meta-data below.
              This is used by the Flutter tool to generate GeneratedPluginRegistrant.java -->

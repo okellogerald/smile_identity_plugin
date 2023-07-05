@@ -1,4 +1,4 @@
-group 'com.tembo_plus.smile_identity_plugin.smile_identity_plugin'
+group 'com.tembo_plus.smile_identity_plugin'
 version '1.0-SNAPSHOT'
 
 buildscript {
@@ -6,11 +6,13 @@ buildscript {
     repositories {
         google()
         mavenCentral()
+        maven { url 'https://oss.sonatype.org/content/repositories/snapshots/' } // Smile Identity Snapshot
     }
 
     dependencies {
         classpath 'com.android.tools.build:gradle:7.3.0'
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
+        classpath 'com.smileidentity:smile-id-android:1.0.1'
     }
 }
 
@@ -23,9 +25,10 @@ allprojects {
 
 apply plugin: 'com.android.library'
 apply plugin: 'kotlin-android'
+//apply plugin: 'com.smileidentity.smile-id-android'
 
 android {
-    compileSdkVersion 31
+    compileSdkVersion 33
 
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_1_8
@@ -42,12 +45,23 @@ android {
     }
 
     defaultConfig {
-        minSdkVersion 16
+        minSdkVersion 19
+    }
+
+        // for smile-identity config
+    packagingOptions {
+        exclude 'META-INF/androidx.*'
+        exclude 'androidx.*'
+        exclude 'META-INF/DEPENDENCIES'
     }
 
     dependencies {
         testImplementation 'org.jetbrains.kotlin:kotlin-test'
         testImplementation 'org.mockito:mockito-core:5.0.0'
+
+        implementation 'com.smileidentity:smile-id-sdk:7.3.27'
+        implementation 'com.smileidentity:smile-id-ui:1.0.10'
+        implementation 'com.smileidentity:netjava:1.0.4'
     }
 
     testOptions {
