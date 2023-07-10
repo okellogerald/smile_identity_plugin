@@ -2,35 +2,28 @@ package com.tembo_plus.smile_identity_plugin
 
 import android.content.Intent
 import android.os.Bundle
-import androidx.annotation.NonNull
 import io.flutter.embedding.android.FlutterFragmentActivity
 import io.flutter.embedding.engine.FlutterEngine
-
 import io.flutter.embedding.engine.plugins.FlutterPlugin
 import io.flutter.embedding.engine.plugins.activity.ActivityAware
 import io.flutter.embedding.engine.plugins.activity.ActivityPluginBinding
 import io.flutter.plugin.common.MethodCall
-import io.flutter.plugin.common.MethodChannel
 import io.flutter.plugin.common.MethodChannel.MethodCallHandler
 import io.flutter.plugin.common.MethodChannel.Result
 
-class SmileIdentityPlugin: FlutterPlugin, MethodCallHandler, ActivityAware
-   {
-  private lateinit var channel : MethodChannel
-  var manager = SmileIdentityManager()
+class SmileIdentityPlugin : FlutterPlugin, MethodCallHandler, ActivityAware {
+  private var manager = SmileIdentityManager()
 
-  override fun onAttachedToEngine(@NonNull flutterPluginBinding: FlutterPlugin.FlutterPluginBinding) {
-    channel = MethodChannel(flutterPluginBinding.binaryMessenger, "smile_identity_plugin")
-    channel.setMethodCallHandler(this)
-    manager.updateChannel(channel)
+  override fun onAttachedToEngine(flutterPluginBinding: FlutterPlugin.FlutterPluginBinding) {
+    manager.onAttachedToEngine(flutterPluginBinding, this)
   }
 
-  override fun onMethodCall(@NonNull call: MethodCall, @NonNull result: Result) {
+  override fun onMethodCall(call: MethodCall, result: Result) {
     return manager.onMethodCall(call, result)
   }
 
-  override fun onDetachedFromEngine(@NonNull binding: FlutterPlugin.FlutterPluginBinding) {
-    channel.setMethodCallHandler(null)
+  override fun onDetachedFromEngine(binding: FlutterPlugin.FlutterPluginBinding) {
+    manager.onDetachedFromEngine()
   }
 
   override fun onAttachedToActivity(binding: ActivityPluginBinding) {
@@ -50,9 +43,8 @@ class SmileIdentityPlugin: FlutterPlugin, MethodCallHandler, ActivityAware
   }
 }
 
-open class SmileIdentityMainActivity: FlutterFragmentActivity(), MethodCallHandler {
-  private lateinit var channel : MethodChannel
-  var manager = SmileIdentityManager()
+open class SmileIdentityMainActivity : FlutterFragmentActivity(), MethodCallHandler {
+  private var manager = SmileIdentityManager()
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
@@ -61,23 +53,30 @@ open class SmileIdentityMainActivity: FlutterFragmentActivity(), MethodCallHandl
 
   override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
     super.configureFlutterEngine(flutterEngine)
-    val messenger = flutterEngine.dartExecutor.binaryMessenger
-    channel = MethodChannel(messenger, "smile_identity_plugin")
-    manager.updateChannel(channel)
+    manager.onConfigureFlutterEngine(flutterEngine, this)
   }
 
+  @Deprecated("Deprecated in Java")
   override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
     super.onActivityResult(requestCode, resultCode, data)
     manager.onActivityResult(requestCode, resultCode)
   }
 
+  override fun onRequestPermissionsResult(
+      requestCode: Int,
+      permissions: Array<out String>,
+      grantResults: IntArray
+  ) {
+    super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+    manager.onRequestPermissionsResult(requestCode, permissions, grantResults)
+  }
+
   override fun onDetachedFromWindow() {
     super.onDetachedFromWindow()
-     channel.setMethodCallHandler(null)
-    manager.updateChannel(channel)
+    manager.onDetachedFromWindow()
   }
 
   override fun onMethodCall(call: MethodCall, result: Result) {
-     manager.onMethodCall(call, result)
+    manager.onMethodCall(call, result)
   }
 }

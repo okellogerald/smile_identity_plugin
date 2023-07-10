@@ -4,11 +4,11 @@ A new Flutter plugin project.
 
 ## Getting Started
 
+### Android Set-up
+
 > Add `smile_config.json` file in android/app folder
 
-</br>
-
-### In `android/app/build.gradle`
+#### In `android/app/build.gradle`
 
 1. Add `apply plugin: 'com.smileidentity.smile-id-android'`
 2. Add the following dependecies:
@@ -34,9 +34,7 @@ packagingOptions {
 
 4. The `minSdkVersion` should be atleast 19
 
-</br>
-
-### In `android/build.gradle`
+#### In `android/build.gradle`
 
 1. Add the following in the `buildscript` section
 
@@ -54,3 +52,7 @@ buildscript {
 
 }
 ```
+
+### iOS Set-up
+
+> Add `smile_config.json` file in ios/Runner folder
