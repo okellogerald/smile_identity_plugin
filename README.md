@@ -56,3 +56,26 @@ buildscript {
 ### iOS Set-up
 
 > Add `smile_config.json` file in ios/Runner folder
+
+#### In your `ios/Runner/Podfile` file
+
+> Add the following pods:
+
+```Swift
+target 'Runner' do
+  # use_frameworks!
+  use_modular_headers!
+
+  # pods to add
+  pod 'Smile_Identity_SDK'
+  pod 'MaterialComponents/Snackbar'
+
+  flutter_install_all_ios_pods File.dirname(File.realpath(__FILE__))
+  target 'RunnerTests' do
+    inherit! :search_paths
+  end
+end
+
+```
+
+> Set `platform :ios, '13.0'`

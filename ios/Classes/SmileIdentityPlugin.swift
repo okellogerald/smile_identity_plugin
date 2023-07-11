@@ -16,17 +16,31 @@ struct SmileData {
     let tag: String;
 }
 
-class SmileIdentityPlugin: NSObject, SIDCaptureManagerDelegate {
-     var METHOD_CHANNEL_NAME = "smile_identity_plugin";
+public class SmileIdentityPluginImpl: NSObject, FlutterPlugin, SIDCaptureManagerDelegate {
+     static var METHOD_CHANNEL_NAME = "smile_identity_plugin";
      var channel: FlutterMethodChannel!;
 
-    var cameraManager = CameraManager()
+     var cameraManager = CameraManager()
     
-      init(binaryMessenger: FlutterBinaryMessenger) {
-         super.init()
-         self.channel = FlutterMethodChannel(name: METHOD_CHANNEL_NAME, binaryMessenger: binaryMessenger)
-         setUpListeners()
-     }
+    init(_ _channel: FlutterMethodChannel) {
+        channel = _channel
+    }
+    
+    public static func register(with registrar: FlutterPluginRegistrar) {
+      let channel = FlutterMethodChannel(
+        name: METHOD_CHANNEL_NAME,
+        binaryMessenger: registrar.messenger())
+
+      let instance = SmileIdentityPluginImpl(channel)
+      registrar.addMethodCallDelegate(instance, channel: channel)
+    }
+
+    
+//      init(binaryMessenger: FlutterBinaryMessenger) {
+//         super.init()
+//         self.channel = FlutterMethodChannel(name: METHOD_CHANNEL_NAME, binaryMessenger: binaryMessenger)
+//         setUpListeners()
+//     }
 
      func setUpListeners() {
         channel.setMethodCallHandler({
@@ -50,7 +64,7 @@ class SmileIdentityPlugin: NSObject, SIDCaptureManagerDelegate {
         })
     }
     
-    private func getSmileData(args: [String:Any]) -> SmileData {
+     func getSmileData(args: [String:Any]) -> SmileData {
         return SmileData(
             userId: (args["userId"] as? String) ?? "",
             jobId: (args["jobId"] as? String) ?? "",
@@ -141,13 +155,13 @@ class SmileIdentityPlugin: NSObject, SIDCaptureManagerDelegate {
         return options;
     }
     
-    func onSuccess(tag: String, selfiePreview: UIImage?, idFrontPreview: UIImage?, idBackPreview: UIImage?) {
+    public func onSuccess(tag: String, selfiePreview: UIImage?, idFrontPreview: UIImage?, idBackPreview: UIImage?) {
        print("Success √√√√√√√√√√")
        MDCSnackbarManager.default.show(MDCSnackbarMessage(text: "Success"))
        channel.invokeMethod("capture_state", arguments: ["success": true])
     }
     
-    func onError(tag: String, sidError: Smile_Identity_SDK.SIDError) {
+    public func onError(tag: String, sidError: Smile_Identity_SDK.SIDError) {
        print("Error \(sidError.localizedDescription)")
        MDCSnackbarManager.default.show(MDCSnackbarMessage(text: "Error: \(sidError.message)"))
        channel.invokeMethod("capture_state", arguments: ["success": false])

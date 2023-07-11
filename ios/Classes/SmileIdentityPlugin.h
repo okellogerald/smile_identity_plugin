@@ -1,4 +1,6 @@
 #import <Flutter/Flutter.h>
+//#import <smile_identity_plugin-Swift.h>
+//@class SmileIdentityPluginImpl;
 
-@interface SmileIdentityPluginImpl : NSObject<FlutterPlugin>
+@interface SmileIdentityPlugin : NSObject<FlutterPlugin>
 @end

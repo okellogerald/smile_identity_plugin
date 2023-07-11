@@ -1,15 +1,8 @@
 #import "SmileIdentityPlugin.h"
-#if __has_include(<smile_identity_plugin/smile_identity_plugin-Swift.h>)
-#import <smile_identity_plugin/smile_identity_plugin-Swift.h>
-#else
-// Support project import fallback if the generated compatibility header
-// is not copied when this plugin is created as a library.
-// https://forums.swift.org/t/swift-static-libraries-dont-copy-generated-objective-c-header/19816
 #import "smile_identity_plugin-Swift.h"
-#endif
 
-@implementation SmileIdentityPluginImpl
+@implementation SmileIdentityPlugin
 + (void)registerWithRegistrar:(NSObject<FlutterPluginRegistrar>*)registrar {
-  [SmileIdentityPlugin registerWithRegistrar:registrar];
+    [SmileIdentityPluginImpl registerWithRegistrar:registrar];
 }
 @end
