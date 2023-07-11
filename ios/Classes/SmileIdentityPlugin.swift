@@ -1,5 +1,10 @@
-import UIKit
+#if os(iOS)
 import Flutter
+import UIKit
+#elseif os(macOS)
+import FlutterMacOS
+import AppKit
+#endif
 import MaterialComponents
 import Smile_Identity_SDK
 import os
@@ -14,15 +19,20 @@ struct SmileData {
     let firstName: String;
     let lastName: String;
     let tag: String;
+    let jobType: Int;
+    let environment: SIDNetData.Environment;
+    let additionalValues: [String:Any]?;
+    let callbackUrl: String;
 }
 
 public class SmileIdentityPluginImpl: NSObject, FlutterPlugin, SIDCaptureManagerDelegate {
      static var METHOD_CHANNEL_NAME = "smile_identity_plugin";
      var channel: FlutterMethodChannel!;
-
+    
      var cameraManager = CameraManager()
     
     init(_ _channel: FlutterMethodChannel) {
+        super.init()
         channel = _channel
     }
     
@@ -34,37 +44,57 @@ public class SmileIdentityPluginImpl: NSObject, FlutterPlugin, SIDCaptureManager
       let instance = SmileIdentityPluginImpl(channel)
       registrar.addMethodCallDelegate(instance, channel: channel)
     }
-
     
-//      init(binaryMessenger: FlutterBinaryMessenger) {
-//         super.init()
-//         self.channel = FlutterMethodChannel(name: METHOD_CHANNEL_NAME, binaryMessenger: binaryMessenger)
-//         setUpListeners()
-//     }
-
-     func setUpListeners() {
-        channel.setMethodCallHandler({
-            (call: FlutterMethodCall, result: @escaping FlutterResult) -> Void in
-            switch call.method {
-            case "battery_level":
-                result(10);
-            case "capture":
-                let data = self.getSmileData(args: call.arguments as! [String:Any])
-                Task {
-                    await self.capture(smileData: data)
-                }
-            case "submit":
-                let data = self.getSmileData(args: call.arguments as! [String:Any])
-                Task {
-                    await self.submitJob(smileData: data)
-                }
-            default:
-                result(FlutterMethodNotImplemented)
+    public func handle(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
+        switch call.method {
+        case "battery_level":
+            result(10);
+        case "capture":
+            let args = call.arguments as! [String: Any]
+            let tag = (args["tag"] as? String) ?? ""
+            let type = (args["captureType"] as? String) ?? ""
+            let handlePermissions = (args["handlePermissions"] as? Bool) ?? true
+            let captureType = getType(type: type);
+            Task {
+                await self.capture(
+                    tag: tag,
+                    captureType: captureType,
+                    handlePermissions: handlePermissions
+                )
             }
-        })
+        case "submit":
+            let data = self.getSmileData(args: call.arguments as! [String:Any])
+            Task {
+                await self.submitJob(smileData: data)
+            }
+        default:
+            result(FlutterMethodNotImplemented)
+        }
     }
     
+    func getType(type: String) -> CaptureType {
+        switch type {
+        case "SELFIE":
+            return CaptureType.SELFIE
+        case "ID_CAPTURE":
+            return CaptureType.ID_CAPTURE
+        case "SELFIE_AND_ID_CAPTURE":
+            return CaptureType.SELFIE_AND_ID_CAPTURE
+        case "ID_CAPTURE_AND_SELFIE":
+            return CaptureType.ID_CAPTURE_AND_SELFIE
+        default:
+            return CaptureType.SELFIE
+        }
+        
+    }
+
      func getSmileData(args: [String:Any]) -> SmileData {
+         let env = (args["environment"] as? String) ?? "TEST"
+           var environment = SIDNetData.Environment.TEST
+           if (env == "PROD") {
+             environment = SIDNetData.Environment.PROD
+           }
+         
         return SmileData(
             userId: (args["userId"] as? String) ?? "",
             jobId: (args["jobId"] as? String) ?? "",
@@ -73,23 +103,26 @@ public class SmileIdentityPluginImpl: NSObject, FlutterPlugin, SIDCaptureManager
             idNumber: (args["idNumber"] as? String) ?? "",
             firstName: (args["firstName"] as? String) ?? "",
             lastName: (args["lastName"] as? String) ?? "",
-            tag: (args["tag"] as? String) ?? ""
+            tag: (args["tag"] as? String) ?? "",
+            jobType: (args["jobType"] as? Int) ?? 1,
+            environment: environment,
+            additionalValues: (args["additionalValues"] as? [String:Any]) ?? [:],
+            callbackUrl: (args["callbackUrl"] as? String) ?? ""
         );
     }
 
-    private func capture(smileData: SmileData) async {
-        let granted = await cameraManager.checkCameraPermission()
+    private func capture(tag: String, captureType: CaptureType, handlePermissions: Bool) async {
+        let granted = await cameraManager.checkCameraPermission(requestPermissionIfNotGranted: handlePermissions)
         if(!granted) {
-            MDCSnackbarManager.default.show(MDCSnackbarMessage(text: "We need the camera permission to capture your selfie and the verification document. Please enable it in the Settings app"))
+            showMessage(CAMERA_PERMISSION_ERROR_DESC)
             return
         }
                 
-        let captureType = CaptureType.SELFIE_AND_ID_CAPTURE
          DispatchQueue.main.async {
             var builder = SIDCaptureManager.Builder(delegate:self, captureType: captureType)
             
-            if  !smileData.tag.isEmpty {
-                builder = builder.setTag(tag: smileData.tag)
+            if  !tag.isEmpty {
+                builder = builder.setTag(tag: tag)
             }
             
             if (captureType == CaptureType.SELFIE_AND_ID_CAPTURE || captureType == CaptureType.ID_CAPTURE) {
@@ -108,11 +141,19 @@ public class SmileIdentityPluginImpl: NSObject, FlutterPlugin, SIDCaptureManager
     
     private func submitJob(smileData: SmileData) async {
         let sidNetworkRequest = SIDNetworkRequest()
-        sidNetworkRequest.setDelegate(delegate: SubmitJobListener())
+        let delegate = SubmitJobListener(
+            onCompleted: {
+                self.channel.invokeMethod("submit_state", arguments: ["completed": true])
+            },
+            onError: { error in
+                self.channel.invokeMethod("submit_state", arguments: ["error": error])
+             }
+        )
+        sidNetworkRequest.setDelegate(delegate: delegate)
         sidNetworkRequest.initialize()
         
-        let sidNetData = SIDNetData(environment: SIDNetData.Environment.PROD);
-        sidNetData.setCallBackUrl(callbackUrl: "https://webapi.temboplus.com/webhook/smile-identity/confirm-kyc")
+        let sidNetData = SIDNetData(environment: smileData.environment);
+        sidNetData.setCallBackUrl(callbackUrl: smileData.callbackUrl)
 
         let sidConfig = SIDConfig()
         sidConfig.setSidNetworkRequest( sidNetworkRequest : sidNetworkRequest )
@@ -121,19 +162,23 @@ public class SmileIdentityPluginImpl: NSObject, FlutterPlugin, SIDCaptureManager
    
         let sidIdInfo = SIDUserIdInfo()
         sidIdInfo.setCountry(country: smileData.country )
-        //sidIdInfo.setIdType(idType: smileData.idType )
-        //sidIdInfo.setIdNumber(idNumber: smileData.idNumber )
-        //sidIdInfo.setFirstName(firstName: smileData.firstName )
-        //sidIdInfo.setLastName(lastName: smileData.lastName )
+        sidIdInfo.setIdType(idType: smileData.idType )
+        sidIdInfo.setIdNumber(idNumber: smileData.idNumber )
+        sidIdInfo.setFirstName(firstName: smileData.firstName )
+        sidIdInfo.setLastName(lastName: smileData.lastName )
         sidConfig.setUserIdInfo(userIdInfo: sidIdInfo)
        
         let sidPartnerParams = PartnerParams()
         sidPartnerParams.setJobId(jobId: smileData.jobId )
         sidPartnerParams.setUserId(userId:  smileData.userId )
-        sidPartnerParams.setJobType(jobType: 1 )
-        sidPartnerParams.setAdditionalValue(key: "profile_id", val: smileData.userId)
+        sidPartnerParams.setJobType(jobType: smileData.jobType )
+        if (smileData.additionalValues != nil) {
+            for e in smileData.additionalValues! {
+                sidPartnerParams.setAdditionalValue(key: e.key, val: e.value)
+            }
+        }
+        
         sidConfig.setPartnerParams( partnerParams : sidPartnerParams )
-    
         sidConfig.setIsEnrollMode(isEnrollMode: true)
         let hasIdCard = SIDInfosManager.hasIdCard(userTag: smileData.tag)
         sidConfig.setUseIdCard(useIdCard: hasIdCard)
@@ -141,10 +186,9 @@ public class SmileIdentityPluginImpl: NSObject, FlutterPlugin, SIDCaptureManager
         sidConfig.build(userTag: smileData.tag)
         do {
             try sidConfig.getSidNetworkRequest().submit(sidConfig: sidConfig)
-            channel.invokeMethod("submit_state", arguments: ["success": true])
         } catch {
-            MDCSnackbarManager.default.show(MDCSnackbarMessage(text: "Submission Error: \(error.localizedDescription)"))
-            channel.invokeMethod("submit_state", arguments: ["success": false])
+            showMessage("Submission Error: \(error.localizedDescription)")
+            channel.invokeMethod("submit_state", arguments: ["error": "Job Submission Error!"])
         }
     }
     
@@ -156,25 +200,34 @@ public class SmileIdentityPluginImpl: NSObject, FlutterPlugin, SIDCaptureManager
     }
     
     public func onSuccess(tag: String, selfiePreview: UIImage?, idFrontPreview: UIImage?, idBackPreview: UIImage?) {
-       print("Success √√√√√√√√√√")
-       MDCSnackbarManager.default.show(MDCSnackbarMessage(text: "Success"))
        channel.invokeMethod("capture_state", arguments: ["success": true])
     }
     
     public func onError(tag: String, sidError: Smile_Identity_SDK.SIDError) {
-       print("Error \(sidError.localizedDescription)")
-       MDCSnackbarManager.default.show(MDCSnackbarMessage(text: "Error: \(sidError.message)"))
+       showMessage("Error: \(sidError.message)")
        channel.invokeMethod("capture_state", arguments: ["success": false])
     }
 }
 
+func showMessage(_ message: String){
+    MDCSnackbarManager.default.show(MDCSnackbarMessage(text: message))
+}
+
 class SubmitJobListener: SIDNetworkRequestDelegate {
+   let onCompleted: ()->()
+   let onError: (String)->()
+    
+    init(onCompleted: @escaping () -> Void, onError: @escaping (String) -> Void) {
+        self.onCompleted = onCompleted
+        self.onError = onError
+    }
+    
     func onDocumentVerified(sidResponse: SIDResponse) {
-        MDCSnackbarManager.default.show(MDCSnackbarMessage(text: "Document is verified"))
+        showMessage("Document is verified")
     }
     
     func onStartJobStatus() {
-        MDCSnackbarManager.default.show(MDCSnackbarMessage(text: "Document is verified"))
+        showMessage("Submitting Job...")
     }
     
     func onEndJobStatus() {
@@ -187,25 +240,27 @@ class SubmitJobListener: SIDNetworkRequestDelegate {
     }
     
     func onAuthenticated(sidResponse: SIDResponse) {
-       MDCSnackbarManager.default.show(MDCSnackbarMessage(text: "Authenticated"))
-        
+        self.onCompleted()
+        showMessage("Authenticated")
     }
     
     func onEnrolled(sidResponse: SIDResponse) {
-        MDCSnackbarManager.default.show(MDCSnackbarMessage(text: "Enrolled"))
+        self.onCompleted()
+        showMessage("Enrolled")
     }
     
     func onComplete() {
-        print("Completed")
-        MDCSnackbarManager.default.show(MDCSnackbarMessage(text: "Completed"))
+        showMessage("Completed!")
     }
     
     func onError(sidError: SIDError) {
-        MDCSnackbarManager.default.show(MDCSnackbarMessage(text: "Error: \(sidError.message)"))
+        self.onError("An error happened while submitting the job")
+        showMessage("Error: \(sidError.message)")
     }
     
     func onIdValidated(idValidationResponse: IDValidationResponse) {
-       MDCSnackbarManager.default.show(MDCSnackbarMessage(text: "Validated"))
+        showMessage("Validated!")
     }
 }
 
+let CAMERA_PERMISSION_ERROR_DESC = "We need the camera permission to capture your selfie and the verification document. Please enable it in the Settings app"

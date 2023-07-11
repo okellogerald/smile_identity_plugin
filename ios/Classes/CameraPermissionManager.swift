@@ -9,13 +9,20 @@ import Foundation
 import AVFoundation
 
 class CameraManager {
-    func checkCameraPermission() async -> Bool {
+    func checkCameraPermission(requestPermissionIfNotGranted: Bool) async -> Bool {
         let cameraAuthorizationStatus = AVCaptureDevice.authorizationStatus(for: .video)
         
          switch cameraAuthorizationStatus {
              case .denied, .restricted: return false
              case .authorized: return true
-             case .notDetermined: return await AVCaptureDevice.requestAccess(for: .video)
+             case .notDetermined:
+             
+             if requestPermissionIfNotGranted {
+                 return await AVCaptureDevice.requestAccess(for: .video)
+             } else {
+                 return false
+             }
+             
          @unknown default:
              return false
          }

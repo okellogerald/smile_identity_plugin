@@ -55,25 +55,28 @@ buildscript {
 
 ### iOS Set-up
 
-> Add `smile_config.json` file in ios/Runner folder
+#### In your `ios/Runner` folder:
 
-#### In your `ios/Runner/Podfile` file
+> Add your `smile_config.json` file
 
-> Add the following pods:
+> Set `NSCameraUsageDescription` in your `info.plist` file
+> Example:
+
+```xml
+	<key>NSCameraUsageDescription</key>
+	<string>Using Camera for Smile Identity</string>
+```
+
+> In your `ios/Runner/Podfile` file, add the following pods:
 
 ```Swift
 target 'Runner' do
-  # use_frameworks!
-  use_modular_headers!
+  ...
 
-  # pods to add
   pod 'Smile_Identity_SDK'
   pod 'MaterialComponents/Snackbar'
 
-  flutter_install_all_ios_pods File.dirname(File.realpath(__FILE__))
-  target 'RunnerTests' do
-    inherit! :search_paths
-  end
+  ...
 end
 
 ```

@@ -28,12 +28,17 @@ class SmileState {
 
   bool get hasError => error != null;
 
-  SmileState addError(String error) {
+  SmileState addError(String? error) {
     return SmileState(
       captured: captured,
       submitted: submitted,
       data: data,
       error: error,
     );
+  }
+
+  @override
+  String toString() {
+    return 'SmileState(captured: $captured, submitted: $submitted, data: $data, error: $error)';
   }
 }

@@ -11,7 +11,7 @@ class MethodChannelSmileIdentityPlugin extends SmileIdentityPluginPlatform {
 
   @override
   Future<String?> getPlatformVersion() async {
-    final version = await methodChannel.invokeMethod<String>('getPlatformVersion');
+    final version = await methodChannel.invokeMethod<String>('battery_level');
     return version;
   }
 }
