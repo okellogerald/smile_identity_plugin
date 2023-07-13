@@ -53,7 +53,7 @@ open class SmileIdentityMainActivity : FlutterFragmentActivity(), MethodCallHand
 
   override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
     super.configureFlutterEngine(flutterEngine)
-    manager.onConfigureFlutterEngine(flutterEngine, this)
+    manager.configureFlutterEngine(flutterEngine, this)
   }
 
   @Deprecated("Deprecated in Java")

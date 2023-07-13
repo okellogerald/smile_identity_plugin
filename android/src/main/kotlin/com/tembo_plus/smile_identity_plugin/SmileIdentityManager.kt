@@ -47,7 +47,7 @@ class SmileIdentityManager {
   private lateinit var smileData: SmileData
   private lateinit var result: Result
 
-  fun onConfigureFlutterEngine(flutterEngine: FlutterEngine, handler: MethodCallHandler) {
+  fun configureFlutterEngine(flutterEngine: FlutterEngine, handler: MethodCallHandler) {
     val messenger = flutterEngine.dartExecutor.binaryMessenger
     channel = MethodChannel(messenger, "smile_identity_plugin")
     channel.setMethodCallHandler(handler)
@@ -197,7 +197,9 @@ class SmileIdentityManager {
     request = SIDNetworkRequest(activity)
     request.setOnCompleteListener { showMessage("Completed!") }
     request.set0nErrorListener { showMessage("An error happened: ${it.message}") }
-    request.setOnEnrolledListener { showMessage("You're enrolled") }
+    request.setOnEnrolledListener {
+      showMessage("You're enrolled")
+    }
   }
 
   fun onActivityResult(requestCode: Int, resultCode: Int) {
@@ -211,6 +213,8 @@ class SmileIdentityManager {
       1004 -> {
         if (resultCode == -1) {
           channel.invokeMethod("capture_state", mapOf("success" to true))
+        } else {
+          channel.invokeMethod("capture_state", mapOf("success" to false))
         }
       }
     }
@@ -225,7 +229,6 @@ class SmileIdentityManager {
       // camera-permission error
       2023 -> {
         val index = permissions.indexOf(Manifest.permission.CAMERA)
-        // showMessage("${grantResults[index] == PackageManager.PERMISSION_GRANTED}")
         if (index != -1) {
           if (grantResults[index] == PackageManager.PERMISSION_GRANTED) {
             channel.invokeMethod("permission_state", mapOf("success" to true))
@@ -259,7 +262,7 @@ class SmileIdentityManager {
             tag = (args["tag"] ?: "") as String,
             jobType = (args["jobType"] ?: 1) as Int,
             environment = environment,
-            additionalValues = (args["additionalValues"] ?: "") as Map<String, Any>?,
+            additionalValues = (args["additionalValues"] ?: mapOf<String, Any>()) as Map<String, Any>?,
             callbackUrl = (args["callbackUrl"] ?: "") as String,
         )
   }
