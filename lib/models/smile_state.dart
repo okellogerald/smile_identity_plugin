@@ -1,44 +1,45 @@
+import 'package:smile_identity_plugin/models/capture_state.dart';
+import 'package:smile_identity_plugin/models/submit_state.dart';
+
 import 'smile_data.dart';
 
 class SmileState {
-  final bool captured;
-  final bool submitted;
+  final CaptureState captureState;
+  final SubmitState submitState;
   final SmileData? data;
-  final String? error;
 
   const SmileState({
-    this.captured = false,
-    this.submitted = false,
+    this.captureState = const CaptureState.none(),
+    this.submitState = const SubmitState.none(),
     this.data,
-    this.error,
   });
 
   SmileState copyWith({
-    bool? captured,
-    bool? submitted,
+    CaptureState? captureState,
+    SubmitState? submitState,
     SmileData? data,
   }) {
     return SmileState(
-      captured: captured ?? this.captured,
-      submitted: submitted ?? this.submitted,
+      captureState: captureState ?? this.captureState,
+      submitState: submitState ?? this.submitState,
       data: data ?? this.data,
-      error: error,
-    );
-  }
-
-  bool get hasError => error != null;
-
-  SmileState addError(String? error) {
-    return SmileState(
-      captured: captured,
-      submitted: submitted,
-      data: data,
-      error: error,
     );
   }
 
   @override
-  String toString() {
-    return 'SmileState(captured: $captured, submitted: $submitted, data: $data, error: $error)';
+  bool operator ==(covariant SmileState other) {
+    if (identical(this, other)) return true;
+
+    return other.captureState == captureState &&
+        other.submitState == submitState &&
+        other.data == data;
   }
+
+  @override
+  int get hashCode =>
+      captureState.hashCode ^ submitState.hashCode ^ data.hashCode;
+
+  @override
+  String toString() =>
+      'SmileState(captureState: $captureState, submitState: $submitState, data: $data)';
 }

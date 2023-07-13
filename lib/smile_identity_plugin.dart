@@ -2,6 +2,8 @@ import 'dart:async';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
+import 'package:smile_identity_plugin/models/capture_state.dart';
+import 'package:smile_identity_plugin/models/submit_state.dart';
 import 'package:uuid/uuid.dart';
 
 import 'models/smile_data.dart';
@@ -51,17 +53,15 @@ class SmileIdentityPlugin extends ValueNotifier<SmileState> {
     SmileData data, {
     bool handleCameraPermission = true,
   }) async {
-    final smileData = data.copyWith(jobId: _randomJobId, tag: _randomTag);
-    value = value.copyWith(data: smileData);
+    final e = data.copyWith(jobId: _randomJobId, tag: _randomTag);
 
-    // Removing Any Errors
-    value = value.addError(null);
+    value = SmileState(data: e, captureState: const CaptureState.capturing());
 
     // For iOS
     if (_isIOS || _isMacOS) {
-      final data = Map<String, dynamic>.from(smileData.captureParams);
+      final data = Map<String, dynamic>.from(value.data!.captureParams);
       data["handlePermissions"] = handleCameraPermission;
-      await _channel.invokeMethod("capture", smileData.captureParams);
+      await _channel.invokeMethod("capture", data);
       return;
     }
 
@@ -76,11 +76,11 @@ class SmileIdentityPlugin extends ValueNotifier<SmileState> {
     }
 
     if (!grantedCameraPermission) return;
-    await _channel.invokeMethod("capture", smileData.captureParams);
+    await _channel.invokeMethod("capture", value.data!.captureParams);
   }
 
   Future<void> _submitJob() async {
-    value = value.addError(null);
+    value = value.copyWith(submitState: const SubmitState.submitting());
     await _channel.invokeMethod("submit", value.data!.submitParams);
   }
 
@@ -100,6 +100,7 @@ class SmileIdentityPlugin extends ValueNotifier<SmileState> {
     }
   }
 
+  /// handling events / responses from the native code
   Future<dynamic> _methodCallHandler(MethodCall call) async {
     dPrint('''
       method: ${call.method}
@@ -118,29 +119,34 @@ class SmileIdentityPlugin extends ValueNotifier<SmileState> {
 
   void _handleCaptureStateCall(MethodCall call) {
     final captured = call.findArg<bool>("success") ?? false;
-    value = value.copyWith(captured: captured);
-    if (value.captured) _eventsController.add(_Event.submit);
+    final error = call.findArg<String>("error") ?? "Capturing failed!";
+
+    if (captured) {
+      value = value.copyWith(captureState: const CaptureState.captured());
+      _eventsController.add(_Event.submit);
+      return;
+    }
+    value = value.copyWith(captureState: CaptureState.error(error));
   }
 
   void _handleSubmitStateCall(MethodCall call) {
     final submitted = call.findArg<bool>("success") ?? false;
-    final error = call.findArg<String>("error");
+    final error = call.findArg<String>("error") ?? "Submission Failed!";
 
-    dPrint('''
-      Error Equal: ${value.error == error}
-      Submitted Equal: ${value.submitted == submitted}
-    ''');
-
-    if (value.error == error && value.submitted == submitted) return;
-    value = value.copyWith(submitted: submitted);
-    value = value.addError(error);
+    if (submitted) {
+      value = value.copyWith(submitState: const SubmitState.submitted());
+      return;
+    }
+    value = value.copyWith(submitState: SubmitState.error(error));
   }
 
   void _handlePermissionState(MethodCall call) {
     final granted = call.findArg("success") ?? false;
     if (granted) _eventsController.add(_Event.capture);
     if (!granted) {
-      value = value.addError("Camera Permission Not Granted!");
+      value = value.copyWith(
+        captureState: const CaptureState.error("Camera Permission denied!"),
+      );
     }
   }
 

@@ -79,11 +79,6 @@ class SmileIdentityManager {
       "check_camera" -> {
         val granted = checkForCameraPermission(activity)
         result.success(granted)
-//        if (!granted) {
-//          result.success("Success = True")
-//          //channel.invokeMethod("permission_state", mapOf("success" to false))
-//          // result.error("1000", "Camera Permission Not Granted!", null)
-//        }
       }
       "request_camera_permission" -> {
         requestCameraPermission(activity)
@@ -135,7 +130,13 @@ class SmileIdentityManager {
       builder.setSidIdCaptureConfig(idCaptureConfig)
       builder.build().start()
     } catch (e: Exception) {
-      channel.invokeMethod("capture_state", mapOf("success" to false))
+      channel.invokeMethod(
+          "capture_state",
+          mapOf(
+              "success" to false,
+              "error" to (e.message ?: "Capture Error!"),
+          ),
+      )
       showMessage("Error: ${e.message}")
     }
   }
@@ -173,7 +174,6 @@ class SmileIdentityManager {
 
       val config = builder.build(smileData.tag)
       request.submit(config)
-      channel.invokeMethod("submit_state", mapOf("success" to true))
     } catch (e: Exception) {
       showMessage("${e.message}")
       channel.invokeMethod("submit_state", mapOf("success" to false))
@@ -196,9 +196,35 @@ class SmileIdentityManager {
 
     request = SIDNetworkRequest(activity)
     request.setOnCompleteListener { showMessage("Completed!") }
-    request.set0nErrorListener { showMessage("An error happened: ${it.message}") }
+    request.set0nErrorListener {
+      // showMessage("An error happened: ${it.message}")
+      channel.invokeMethod(
+          "submit_state",
+          mapOf(
+              "success" to false,
+              "error" to (it.message ?: "An error happened while submitting the job"),
+          ),
+      )
+    }
     request.setOnEnrolledListener {
-      showMessage("You're enrolled")
+      // showMessage("You're enrolled")
+      channel.invokeMethod(
+          "submit_state",
+          mapOf(
+              "success" to true,
+              "message" to "You're enrolled",
+          ),
+      )
+    }
+    request.setOnAuthenticatedListener {
+      // showMessage("You're authenticated!")
+      channel.invokeMethod(
+          "submit_state",
+          mapOf(
+              "success" to true,
+              "message" to "You're authenticated!",
+          ),
+      )
     }
   }
 
@@ -262,7 +288,8 @@ class SmileIdentityManager {
             tag = (args["tag"] ?: "") as String,
             jobType = (args["jobType"] ?: 1) as Int,
             environment = environment,
-            additionalValues = (args["additionalValues"] ?: mapOf<String, Any>()) as Map<String, Any>?,
+            additionalValues =
+                (args["additionalValues"] ?: mapOf<String, Any>()) as Map<String, Any>?,
             callbackUrl = (args["callbackUrl"] ?: "") as String,
         )
   }
