@@ -70,8 +70,7 @@ class SmileIdentityPlugin extends ValueNotifier<SmileState> {
     if (handleCameraPermission) {
       grantedCameraPermission = await checkCameraPermission();
       if (!grantedCameraPermission) {
-        final result = await _channel.invokeMethod("request_camera_permission");
-        dPrint(result);
+        await _channel.invokeMethod("request_camera_permission");
       }
     }
 
@@ -102,11 +101,6 @@ class SmileIdentityPlugin extends ValueNotifier<SmileState> {
 
   /// handling events / responses from the native code
   Future<dynamic> _methodCallHandler(MethodCall call) async {
-    dPrint('''
-      method: ${call.method}
-      args: ${call.arguments}
-    ''');
-
     switch (call.method) {
       case "capture_state":
         return _handleCaptureStateCall(call);
@@ -155,12 +149,6 @@ class SmileIdentityPlugin extends ValueNotifier<SmileState> {
     _controller.close();
     super.dispose();
   }
-}
-
-void dPrint(value) {
-  print("-------------------------------------------");
-  print(value);
-  print("-------------------------------------------");
 }
 
 extension _DynamicExt on MethodCall {
