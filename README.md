@@ -1,6 +1,6 @@
 # smile_identity_plugin
 
-A new Flutter plugin project.
+Wraps official iOS and Android SmileIdentity SDKs.
 
 ## Getting Started
 

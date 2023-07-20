@@ -1,7 +1,7 @@
 name: smile_identity_plugin
-description: A new Flutter plugin project.
+description: Wraps official iOS and Android SmileIdentity SDKs.
 version: 0.0.1
-homepage: https://google.com/
+homepage: https://github.com/okellogerald/smile_identity_plugin
 
 environment:
   sdk: '>=3.0.1 <4.0.0'
