@@ -3,7 +3,7 @@ import 'package:freezed_annotation/freezed_annotation.dart';
 part 'capture_state.freezed.dart';
 
 @freezed
-sealed class CaptureState with _$CaptureState {
+class CaptureState with _$CaptureState {
   const CaptureState._();
 
   const factory CaptureState.none() = _None;

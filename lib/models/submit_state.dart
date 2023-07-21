@@ -3,7 +3,7 @@ import 'package:freezed_annotation/freezed_annotation.dart';
 part 'submit_state.freezed.dart';
 
 @freezed
-sealed class SubmitState with _$SubmitState {
+class SubmitState with _$SubmitState {
   const SubmitState._();
 
   const factory SubmitState.none() = _None;

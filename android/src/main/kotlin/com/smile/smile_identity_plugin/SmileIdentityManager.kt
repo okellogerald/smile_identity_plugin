@@ -1,4 +1,4 @@
-package com.tembo_plus.smile_identity_plugin
+package com.smile.smile_identity_plugin
 
 import android.Manifest
 import android.app.Activity

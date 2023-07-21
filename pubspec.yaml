@@ -1,11 +1,11 @@
 name: smile_identity_plugin
 description: Wraps official iOS and Android SmileIdentity SDKs.
-version: 0.0.1
+version: 0.0.1+1
 homepage: https://github.com/okellogerald/smile_identity_plugin
 
 environment:
-  sdk: '>=3.0.1 <4.0.0'
-  flutter: ">=3.3.0"
+  sdk: '>=3.0.0 <4.0.0'
+  flutter: ">=3.10.0"
 
 dependencies:
   flutter:
@@ -25,7 +25,7 @@ flutter:
   plugin:
     platforms:
       android:
-        package: com.tembo_plus.smile_identity_plugin
+        package: com.smile.smile_identity_plugin
         pluginClass: SmileIdentityPlugin
       ios:
         pluginClass: SmileIdentityPlugin

@@ -41,7 +41,11 @@ class SmileData {
   /// Anything extra which you may need associated with the current job
   final Map<String, dynamic>? additionalValues;
 
+  /// Defines what images will be required to be captured when the verification process starts
   final CaptureType captureType;
+
+  /// Callback url to receive responses when they are available from Smile-Identity
+  final String? callbackUrl;
 
   SmileData({
     required this.firstName,
@@ -56,6 +60,7 @@ class SmileData {
     this.environment = Environment.test,
     this.additionalValues,
     required this.captureType,
+    this.callbackUrl,
   });
 
   SmileData copyWith({
@@ -114,6 +119,7 @@ class SmileData {
       'environment': environment.label,
       'additionalValues': additionalValues,
       'captureType': captureType.label,
+      "callbackUrl": callbackUrl,
     };
   }
 }
