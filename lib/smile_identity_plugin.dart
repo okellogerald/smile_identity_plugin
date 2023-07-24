@@ -49,6 +49,14 @@ class SmileIdentityPlugin extends ValueNotifier<SmileState> {
     return result ?? false;
   }
 
+  Future<void> retry(
+    SmileData data, {
+    bool handleCameraPermission = true,
+  }) async {
+    value = SmileState(data: data);
+    await capture(data, handleCameraPermission: handleCameraPermission);
+  }
+
   Future<void> capture(
     SmileData data, {
     bool handleCameraPermission = true,

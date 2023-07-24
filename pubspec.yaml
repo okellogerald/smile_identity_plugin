@@ -1,6 +1,6 @@
 name: smile_identity_plugin
 description: Wraps official iOS and Android SmileIdentity SDKs.
-version: 0.0.1+1
+version: 0.0.1+2
 homepage: https://github.com/okellogerald/smile_identity_plugin
 
 environment:
