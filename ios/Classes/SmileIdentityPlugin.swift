@@ -118,7 +118,11 @@ public class SmileIdentityPluginImpl: NSObject, FlutterPlugin, SIDCaptureManager
     private func capture(tag: String, captureType: CaptureType, handlePermissions: Bool) async {
         let granted = await cameraManager.checkCameraPermission(requestPermissionIfNotGranted: handlePermissions)
         if(!granted) {
-            showMessage(CAMERA_PERMISSION_ERROR_DESC)
+            var args : [String:Any] = [:]
+            args["success"] = false
+            args["error"] = CAMERA_PERMISSION_ERROR_DESC
+            channel.invokeMethod("capture_state", arguments: args)
+            //showMessage(CAMERA_PERMISSION_ERROR_DESC)
             return
         }
                 
@@ -209,8 +213,10 @@ public class SmileIdentityPluginImpl: NSObject, FlutterPlugin, SIDCaptureManager
         do {
             try sidConfig.getSidNetworkRequest().submit(sidConfig: sidConfig)
         } catch {
-            showMessage("Submission Error: \(error.localizedDescription)")
-            channel.invokeMethod("submit_state", arguments: ["error": "Job Submission Error!"])
+            var args : [String:Any] = [:]
+            args["success"] = false
+            args["error"] = error.localizedDescription
+            self.channel.invokeMethod("submit_state", arguments: args)
         }
     }
     
@@ -226,14 +232,17 @@ public class SmileIdentityPluginImpl: NSObject, FlutterPlugin, SIDCaptureManager
     }
     
     public func onError(tag: String, sidError: Smile_Identity_SDK.SIDError) {
-       showMessage("Error: \(sidError.message)")
-       channel.invokeMethod("capture_state", arguments: ["success": false])
+       // showMessage("Error: \(sidError.message)")
+        var args : [String:Any] = [:]
+        args["success"] = false
+        args["error"] = sidError.message
+       channel.invokeMethod("capture_state", arguments: args)
     }
 }
 
-func showMessage(_ message: String){
-    MDCSnackbarManager.default.show(MDCSnackbarMessage(text: message))
-}
+//func showMessage(_ message: String){
+//    MDCSnackbarManager.default.show(MDCSnackbarMessage(text: message))
+//}
 
 class SubmitJobListener: SIDNetworkRequestDelegate {
    let onCompleted: (String)->()
@@ -245,11 +254,11 @@ class SubmitJobListener: SIDNetworkRequestDelegate {
     }
     
     func onDocumentVerified(sidResponse: SIDResponse) {
-        showMessage("Document is verified")
+        // showMessage("Document is verified")
     }
     
     func onStartJobStatus() {
-        showMessage("Submitting Job...")
+       // showMessage("Submitting Job...")
     }
     
     func onEndJobStatus() {
@@ -276,12 +285,12 @@ class SubmitJobListener: SIDNetworkRequestDelegate {
     }
     
     func onError(sidError: SIDError) {
-        self.onError("An error happened while submitting the job")
-        showMessage("Error: \(sidError.message)")
+        self.onError(sidError.message)
+        // showMessage("Error: \(sidError.message)")
     }
     
     func onIdValidated(idValidationResponse: IDValidationResponse) {
-        showMessage("ID Validated!")
+       // showMessage("ID Validated")
     }
 }
 

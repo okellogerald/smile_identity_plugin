@@ -1,22 +1,22 @@
 class SmileData {
   /// User's first name
-  final String firstName;
+  final String? firstName;
 
   /// User's last name
-  final String lastName;
+  final String? lastName;
 
   /// The country of issuance of the Identity Document
   final String country;
 
   /// identity Document Number
-  final String idNumber;
+  final String? idNumber;
 
   /// The type of Identity Document
   /// E.g DRIVERS_LICENSE, NATIONAL_ID, PASSPORT
   ///
   /// Find supported documents types for supported countries at
   /// https://docs.smileidentity.com/supported-id-types/for-individuals-kyc/backed-by-id-authority/supported-countries
-  final String idType;
+  final String? idType;
 
   /// User ID to associate the results of this job to.
   final String userId;
@@ -48,11 +48,11 @@ class SmileData {
   final String? callbackUrl;
 
   SmileData({
-    required this.firstName,
-    required this.lastName,
+    this.firstName,
+    this.lastName,
     required this.country,
-    required this.idNumber,
-    required this.idType,
+    this.idNumber,
+    this.idType,
     required this.userId,
     required this.jobType,
     this.jobId,
@@ -60,8 +60,7 @@ class SmileData {
     this.environment = Environment.test,
     this.additionalValues,
     required this.captureType,
-    this.callbackUrl,
-  });
+  }) : callbackUrl = "";
 
   SmileData copyWith({
     String? firstName,
@@ -76,6 +75,7 @@ class SmileData {
     Environment? environment,
     Map<String, dynamic>? additionalValues,
     CaptureType? captureType,
+    String? callbackUrl,
   }) {
     return SmileData(
       firstName: firstName ?? this.firstName,

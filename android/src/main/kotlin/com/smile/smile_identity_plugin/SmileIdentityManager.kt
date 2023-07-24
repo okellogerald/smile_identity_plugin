@@ -104,7 +104,7 @@ class SmileIdentityManager {
             }
             "submit" -> {
                 getSmileDataFrom(call.arguments<Map<String, Any>>() as Map<String, Any>)
-                showMessage("Submitting job...")
+                // showMessage("Submitting job...")
                 submitJob()
                 result.success("Submitting Job")
             }
@@ -142,7 +142,7 @@ class SmileIdentityManager {
                     "error" to (e.message ?: "Capture Error!"),
                 ),
             )
-            showMessage("Error: ${e.message}")
+            // showMessage("Error: ${e.message}")
         }
     }
 
@@ -163,10 +163,10 @@ class SmileIdentityManager {
             }
 
             // https://docs.smileidentity.com/supported-id-types/for-individuals-kyc/backed-by-id-authority
-            if(smileData.idType != null) {
+            if (smileData.idType != null) {
                 meta.sidUserIdInfo.idType = smileData.idType
             }
-            if(smileData.idNumber != null) {
+            if (smileData.idNumber != null) {
                 meta.sidUserIdInfo.idNumber = smileData.idNumber
             }
             meta.partnerParams.jobId = smileData.jobId
@@ -189,8 +189,13 @@ class SmileIdentityManager {
             val config = builder.build(smileData.jobTag)
             request.submit(config)
         } catch (e: Exception) {
-            showMessage("${e.message}")
-            channel.invokeMethod("submit_state", mapOf("success" to false))
+            // showMessage("${e.message}")
+            channel.invokeMethod(
+                "submit_state", mapOf(
+                    "success" to false,
+                    "error" to (e.message ?: "Capture Error")
+                )
+            )
         }
     }
 
@@ -209,7 +214,7 @@ class SmileIdentityManager {
         activity = _activity
 
         request = SIDNetworkRequest(activity)
-        request.setOnCompleteListener { showMessage("Completed!") }
+        // request.setOnCompleteListener { showMessage("Completed!") }
         request.set0nErrorListener {
             // showMessage("An error happened: ${it.message}")
             channel.invokeMethod(
@@ -236,14 +241,14 @@ class SmileIdentityManager {
                 "submit_state",
                 mapOf(
                     "success" to true,
-                    "message" to "You're authenticated!",
+                    "message" to "You're authenticated",
                 ),
             )
         }
     }
 
     fun onActivityResult(requestCode: Int, resultCode: Int) {
-        showMessage("Request Code: $requestCode,Result Code: $resultCode")
+        // showMessage("Request Code: $requestCode,Result Code: $resultCode")
         when (requestCode) {
             // errors associated with smile-capture
             1000,
@@ -280,9 +285,9 @@ class SmileIdentityManager {
         }
     }
 
-    private fun showMessage(message: String) {
-        Toast.makeText(activity, message, Toast.LENGTH_SHORT).show()
-    }
+//    private fun showMessage(message: String) {
+//        Toast.makeText(activity, message, Toast.LENGTH_SHORT).show()
+//    }
 
     private fun getSmileDataFrom(args: Map<String, Any>) {
         val env = (args["environment"] ?: "TEST") as String
