@@ -63,25 +63,18 @@ public class SmileIdentityPluginImpl: NSObject, FlutterPlugin, SIDCaptureManager
     }
     
     private func handleCapture(_ call: FlutterMethodCall) {
-        do {
-            let args = call.arguments as! [String: Any]
-            let tag = (args["tag"] as? String) ?? ""
-            let type = (args["captureType"] as? String) ?? ""
-            let handlePermissions = (args["handlePermissions"] as? Bool) ?? true
-            let captureType = getType(type: type);
-            
-            try Task {
-                await self.capture(
-                    tag: tag,
-                    captureType: captureType,
-                    handlePermissions: handlePermissions
-                )
-            }
-        } catch {
-            var args : [String:Any] = [:]
-            args["success"] = false
-            args["error"] = error.localizedDescription
-            channel.invokeMethod("capture_state", arguments: args)
+        let args = call.arguments as! [String: Any]
+        let tag = (args["tag"] as? String) ?? ""
+        let type = (args["captureType"] as? String) ?? ""
+        let handlePermissions = (args["handlePermissions"] as? Bool) ?? true
+        let captureType = getType(type: type);
+        
+        Task {
+            await self.capture(
+                tag: tag,
+                captureType: captureType,
+                handlePermissions: handlePermissions
+            )
         }
     }
     
@@ -138,12 +131,10 @@ public class SmileIdentityPluginImpl: NSObject, FlutterPlugin, SIDCaptureManager
             args["success"] = false
             args["error"] = CAMERA_PERMISSION_ERROR_DESC
             channel.invokeMethod("capture_state", arguments: args)
-            //showMessage(CAMERA_PERMISSION_ERROR_DESC)
             return
         }
                 
-        showMessage("Working")
-         //DispatchQueue.main.async {
+         DispatchQueue.main.async {
             var builder = SIDCaptureManager.Builder(delegate:self, captureType: captureType)
             
             if  !tag.isEmpty {
@@ -162,7 +153,7 @@ public class SmileIdentityPluginImpl: NSObject, FlutterPlugin, SIDCaptureManager
             builder = builder.setSidSelfieConfig(sidSelfieConfig: selfieConfig)
             builder = builder.setSidIdCaptureConfig(sidIdCaptureConfig: idCaptureConfig!)
             builder.build().start()
-        //}
+        }
     }
     
     private func submitJob(smileData: SmileData) async {
