@@ -12,17 +12,21 @@ import Foundation
 
 struct SmileData {
     let userId: String;
-    let jobId: String;
+    let firstName: String?;
+    let lastName: String?;
     let country: String;
-    let idType: String;
-    let idNumber: String;
-    let firstName: String;
-    let lastName: String;
-    let tag: String;
+
+    let idType: String?;
+    let idNumber: String?;
+    
+    let jobId: String;
     let jobType: Int;
+    let jobTag: String;
+    
+    let callbackUrl: String?;
     let environment: SIDNetData.Environment;
+
     let additionalValues: [String:Any]?;
-    let callbackUrl: String;
 }
 
 public class SmileIdentityPluginImpl: NSObject, FlutterPlugin, SIDCaptureManagerDelegate {
@@ -97,17 +101,17 @@ public class SmileIdentityPluginImpl: NSObject, FlutterPlugin, SIDCaptureManager
          
         return SmileData(
             userId: (args["userId"] as? String) ?? "",
+            firstName: args["firstName"] as? String,
+            lastName: args["lastName"] as? String,
+            country: args["country"] as? String ?? "",
+            idType: args["idType"] as? String,
+            idNumber: args["idNumber"] as? String,
             jobId: (args["jobId"] as? String) ?? "",
-            country: (args["country"] as? String) ?? "",
-            idType: (args["idType"] as? String) ?? "",
-            idNumber: (args["idNumber"] as? String) ?? "",
-            firstName: (args["firstName"] as? String) ?? "",
-            lastName: (args["lastName"] as? String) ?? "",
-            tag: (args["tag"] as? String) ?? "",
             jobType: (args["jobType"] as? Int) ?? 1,
+            jobTag:  (args["jobTag"] as? String) ?? "",
+            callbackUrl: args["callbackUrl"] as? String,
             environment: environment,
-            additionalValues: (args["additionalValues"] as? [String:Any]) ?? [:],
-            callbackUrl: (args["callbackUrl"] as? String) ?? ""
+            additionalValues: (args["additionalValues"] as? [String:Any]) ?? [:]
         );
     }
 
@@ -142,18 +146,26 @@ public class SmileIdentityPluginImpl: NSObject, FlutterPlugin, SIDCaptureManager
     private func submitJob(smileData: SmileData) async {
         let sidNetworkRequest = SIDNetworkRequest()
         let delegate = SubmitJobListener(
-            onCompleted: {
-                self.channel.invokeMethod("submit_state", arguments: ["completed": true])
+            onCompleted: {message in
+                var args : [String:Any] = [:]
+                args["success"] = true
+                args["message"] = message
+                self.channel.invokeMethod("submit_state", arguments: args)
             },
             onError: { error in
-                self.channel.invokeMethod("submit_state", arguments: ["error": error])
+                var args : [String:Any] = [:]
+                args["success"] = false
+                args["error"] = error
+                self.channel.invokeMethod("submit_state", arguments: args)
              }
         )
         sidNetworkRequest.setDelegate(delegate: delegate)
         sidNetworkRequest.initialize()
         
         let sidNetData = SIDNetData(environment: smileData.environment);
-        sidNetData.setCallBackUrl(callbackUrl: smileData.callbackUrl)
+        if let callbackUrl = smileData.callbackUrl {
+            sidNetData.setCallBackUrl(callbackUrl: callbackUrl)
+        }
 
         let sidConfig = SIDConfig()
         sidConfig.setSidNetworkRequest( sidNetworkRequest : sidNetworkRequest )
@@ -162,10 +174,20 @@ public class SmileIdentityPluginImpl: NSObject, FlutterPlugin, SIDCaptureManager
    
         let sidIdInfo = SIDUserIdInfo()
         sidIdInfo.setCountry(country: smileData.country )
-        sidIdInfo.setIdType(idType: smileData.idType )
-        sidIdInfo.setIdNumber(idNumber: smileData.idNumber )
-        sidIdInfo.setFirstName(firstName: smileData.firstName )
-        sidIdInfo.setLastName(lastName: smileData.lastName )
+        
+        if let idType = smileData.idType {
+            sidIdInfo.setIdType(idType: idType )
+        }
+        if let idNumber = smileData.idNumber {
+            sidIdInfo.setIdNumber(idNumber: idNumber )
+        }
+        if let firstName = smileData.firstName {
+            sidIdInfo.setFirstName(firstName: firstName )
+        }
+        if let lastName = smileData.lastName {
+            sidIdInfo.setLastName(lastName: lastName )
+        }
+        
         sidConfig.setUserIdInfo(userIdInfo: sidIdInfo)
        
         let sidPartnerParams = PartnerParams()
@@ -180,10 +202,10 @@ public class SmileIdentityPluginImpl: NSObject, FlutterPlugin, SIDCaptureManager
         
         sidConfig.setPartnerParams( partnerParams : sidPartnerParams )
         sidConfig.setIsEnrollMode(isEnrollMode: true)
-        let hasIdCard = SIDInfosManager.hasIdCard(userTag: smileData.tag)
+        let hasIdCard = SIDInfosManager.hasIdCard(userTag: smileData.jobTag)
         sidConfig.setUseIdCard(useIdCard: hasIdCard)
        
-        sidConfig.build(userTag: smileData.tag)
+        sidConfig.build(userTag: smileData.jobTag)
         do {
             try sidConfig.getSidNetworkRequest().submit(sidConfig: sidConfig)
         } catch {
@@ -214,10 +236,10 @@ func showMessage(_ message: String){
 }
 
 class SubmitJobListener: SIDNetworkRequestDelegate {
-   let onCompleted: ()->()
+   let onCompleted: (String)->()
    let onError: (String)->()
     
-    init(onCompleted: @escaping () -> Void, onError: @escaping (String) -> Void) {
+    init(onCompleted: @escaping (String) -> Void, onError: @escaping (String) -> Void) {
         self.onCompleted = onCompleted
         self.onError = onError
     }
@@ -240,17 +262,17 @@ class SubmitJobListener: SIDNetworkRequestDelegate {
     }
     
     func onAuthenticated(sidResponse: SIDResponse) {
-        self.onCompleted()
-        showMessage("Authenticated")
+        self.onCompleted("You're authenticated")
+        // showMessage("Authenticated")
     }
     
     func onEnrolled(sidResponse: SIDResponse) {
-        self.onCompleted()
-        showMessage("Enrolled")
+        self.onCompleted("You're enrolled")
+        // showMessage("Enrolled")
     }
     
     func onComplete() {
-        showMessage("Completed!")
+        // showMessage("Completed!")
     }
     
     func onError(sidError: SIDError) {
@@ -259,7 +281,7 @@ class SubmitJobListener: SIDNetworkRequestDelegate {
     }
     
     func onIdValidated(idValidationResponse: IDValidationResponse) {
-        showMessage("Validated!")
+        showMessage("ID Validated!")
     }
 }
 

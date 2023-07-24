@@ -19,14 +19,14 @@ class SmileIdentityPlugin extends ValueNotifier<SmileState> {
 
   static const _channel = MethodChannel("smile_identity_plugin");
 
-  final _controller = StreamController<SmileState>.broadcast();
+  final _statesController = StreamController<SmileState>.broadcast();
 
   /// Handles events stream triggered by the plugin itself based on the responses
   /// from the method channel.
   final _eventsController = StreamController<_Event>.broadcast();
 
   /// SmileState Stream
-  Stream<SmileState> get onStateChanged => _controller.stream;
+  Stream<SmileState> get onStateChanged => _statesController.stream;
 
   String get _randomJobId => const Uuid().v1();
   String get _randomTag => (const Uuid().v1()).replaceAll("-", "");
@@ -37,7 +37,7 @@ class SmileIdentityPlugin extends ValueNotifier<SmileState> {
     _channel.setMethodCallHandler(_methodCallHandler);
     _eventsController.stream.listen(_eventsHandler);
 
-    addListener(() => _controller.add(value));
+    addListener(() => _statesController.add(value));
   }
 
   Future<String?> getPlatformVersion() {
@@ -80,6 +80,7 @@ class SmileIdentityPlugin extends ValueNotifier<SmileState> {
 
   Future<void> _submitJob() async {
     value = value.copyWith(submitState: const SubmitState.submitting());
+    print(value.data!.submitParams);
     await _channel.invokeMethod("submit", value.data!.submitParams);
   }
 
@@ -146,7 +147,7 @@ class SmileIdentityPlugin extends ValueNotifier<SmileState> {
 
   @override
   void dispose() {
-    _controller.close();
+    _statesController.close();
     super.dispose();
   }
 }

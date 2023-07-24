@@ -1,4 +1,4 @@
-group 'com.tembo_plus.smile_identity_plugin'
+group 'com.smile.smile_identity_plugin'
 version '1.0-SNAPSHOT'
 
 buildscript {

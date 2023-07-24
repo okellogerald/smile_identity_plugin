@@ -1,4 +1,4 @@
-package com.tembo_plus.smile_identity_plugin.smile_identity_plugin
+package com.smile.smile_identity_plugin.smile_identity_plugin
 
 import io.flutter.plugin.common.MethodCall
 import io.flutter.plugin.common.MethodChannel
