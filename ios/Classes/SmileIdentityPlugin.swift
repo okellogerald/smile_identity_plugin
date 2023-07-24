@@ -142,7 +142,8 @@ public class SmileIdentityPluginImpl: NSObject, FlutterPlugin, SIDCaptureManager
             return
         }
                 
-         DispatchQueue.main.async {
+        showMessage("Working")
+         //DispatchQueue.main.async {
             var builder = SIDCaptureManager.Builder(delegate:self, captureType: captureType)
             
             if  !tag.isEmpty {
@@ -150,7 +151,8 @@ public class SmileIdentityPluginImpl: NSObject, FlutterPlugin, SIDCaptureManager
             }
             
             if (captureType == CaptureType.SELFIE_AND_ID_CAPTURE || captureType == CaptureType.ID_CAPTURE) {
-                let sidIdCaptureConfig = SIDIDCaptureConfig.Builder().setIdCaptureType(idCaptureType: IDCaptureType.Front).build()
+                let sidIdCaptureConfig = SIDIDCaptureConfig.Builder().setIdCaptureType(idCaptureType: IDCaptureType.Front_And_Back
+                ).build()
                 builder = builder.setSidIdCaptureConfig(sidIdCaptureConfig: sidIdCaptureConfig!)
             }
             
@@ -160,7 +162,7 @@ public class SmileIdentityPluginImpl: NSObject, FlutterPlugin, SIDCaptureManager
             builder = builder.setSidSelfieConfig(sidSelfieConfig: selfieConfig)
             builder = builder.setSidIdCaptureConfig(sidIdCaptureConfig: idCaptureConfig!)
             builder.build().start()
-        }
+        //}
     }
     
     private func submitJob(smileData: SmileData) async {
@@ -256,9 +258,9 @@ public class SmileIdentityPluginImpl: NSObject, FlutterPlugin, SIDCaptureManager
     }
 }
 
-//func showMessage(_ message: String){
-//    MDCSnackbarManager.default.show(MDCSnackbarMessage(text: message))
-//}
+func showMessage(_ message: String){
+    MDCSnackbarManager.default.show(MDCSnackbarMessage(text: message))
+}
 
 class SubmitJobListener: SIDNetworkRequestDelegate {
    let onCompleted: (String)->()
