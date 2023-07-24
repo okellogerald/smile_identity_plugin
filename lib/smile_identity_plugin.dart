@@ -80,7 +80,6 @@ class SmileIdentityPlugin extends ValueNotifier<SmileState> {
 
   Future<void> _submitJob() async {
     value = value.copyWith(submitState: const SubmitState.submitting());
-    print(value.data!.submitParams);
     await _channel.invokeMethod("submit", value.data!.submitParams);
   }
 
