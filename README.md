@@ -17,10 +17,9 @@ Example:
 ```kotlin
 package com.example.example
 
-import com.tembo_plus.smile_identity_plugin.SmileIdentityMainActivity
-import io.flutter.embedding.android.FlutterActivity
+import com.smile.smile_identity_plugin.SmileIdentityMainActivity
 
-class MainActivity: SmileIdentityMainActivity() {
+class MainActivity : SmileIdentityMainActivity() {
 
 }
 ```

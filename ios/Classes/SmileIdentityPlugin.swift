@@ -54,25 +54,41 @@ public class SmileIdentityPluginImpl: NSObject, FlutterPlugin, SIDCaptureManager
         case "battery_level":
             result(10);
         case "capture":
+            handleCapture(call)
+        case "submit":
+            handleSubmit(call)
+        default:
+            result(FlutterMethodNotImplemented)
+        }
+    }
+    
+    private func handleCapture(_ call: FlutterMethodCall) {
+        do {
             let args = call.arguments as! [String: Any]
             let tag = (args["tag"] as? String) ?? ""
             let type = (args["captureType"] as? String) ?? ""
             let handlePermissions = (args["handlePermissions"] as? Bool) ?? true
             let captureType = getType(type: type);
-            Task {
+            
+            try Task {
                 await self.capture(
                     tag: tag,
                     captureType: captureType,
                     handlePermissions: handlePermissions
                 )
             }
-        case "submit":
-            let data = self.getSmileData(args: call.arguments as! [String:Any])
-            Task {
-                await self.submitJob(smileData: data)
-            }
-        default:
-            result(FlutterMethodNotImplemented)
+        } catch {
+            var args : [String:Any] = [:]
+            args["success"] = false
+            args["error"] = error.localizedDescription
+            channel.invokeMethod("capture_state", arguments: args)
+        }
+    }
+    
+    private func handleSubmit(_ call: FlutterMethodCall) {
+        let data = self.getSmileData(args: call.arguments as! [String:Any])
+        Task {
+            await self.submitJob(smileData: data)
         }
     }
     
