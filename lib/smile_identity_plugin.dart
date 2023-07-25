@@ -104,8 +104,6 @@ class SmileIdentityPlugin extends ValueNotifier<SmileState> {
 
   /// handling events / responses from the native code
   Future<dynamic> _methodCallHandler(MethodCall call) async {
-    print(call.method);
-    print(call.arguments);
     switch (call.method) {
       case "capture_state":
         return _handleCaptureStateCall(call);
