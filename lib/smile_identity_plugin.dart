@@ -8,7 +8,6 @@ import 'package:uuid/uuid.dart';
 
 import 'models/smile_data.dart';
 import 'models/smile_state.dart';
-import 'smile_identity_plugin_platform_interface.dart';
 
 enum _Event { capture, submit }
 
@@ -38,10 +37,6 @@ class SmileIdentityPlugin extends ValueNotifier<SmileState> {
     _eventsController.stream.listen(_eventsHandler);
 
     addListener(() => _statesController.add(value));
-  }
-
-  Future<String?> getPlatformVersion() {
-    return SmileIdentityPluginPlatform.instance.getPlatformVersion();
   }
 
   Future<bool> checkCameraPermission() async {
