@@ -45,13 +45,12 @@ public class SmileIdentityPluginImpl: NSObject, FlutterPlugin {
     }
 }
 
-
-public class SmileIdentityPlugin: NSObject {
+public class SmileIdentity: NSObject {
     var channel: FlutterMethodChannel;
     var manager: SmileIdentityManager!;
     
     public init(binaryMessenger: FlutterBinaryMessenger) {
-        var channel = FlutterMethodChannel(name: METHOD_CHANNEL_NAME, binaryMessenger: binaryMessenger)
+        let channel = FlutterMethodChannel(name: METHOD_CHANNEL_NAME, binaryMessenger: binaryMessenger)
         self.channel = channel
         self.manager = SmileIdentityManager(channel: channel)
     }
