@@ -42,10 +42,7 @@ Example:
 ```Swift
 target 'Runner' do
   ...
-
   pod 'Smile_Identity_SDK'
-  pod 'MaterialComponents/Snackbar'
-
   ...
 end
 
