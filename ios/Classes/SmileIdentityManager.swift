@@ -121,12 +121,9 @@ class SmileIdentityManager : NSObject, SIDCaptureManagerDelegate {
                 builder = builder.setSidIdCaptureConfig(sidIdCaptureConfig: sidIdCaptureConfig!)
             }
             
-            let selfieConfig = (SIDSelfieCaptureConfig.Builder()).build()
-            let idCaptureConfig = (SIDIDCaptureConfig.Builder()).build()
-            
-            builder = builder.setSidSelfieConfig(sidSelfieConfig: selfieConfig)
-            builder = builder.setSidIdCaptureConfig(sidIdCaptureConfig: idCaptureConfig!)
-            builder.build().start()
+             let selfieConfig = (SIDSelfieCaptureConfig.Builder()).build()
+             builder = builder.setSidSelfieConfig(sidSelfieConfig: selfieConfig)
+             builder.build().start()
         }
     }
     
