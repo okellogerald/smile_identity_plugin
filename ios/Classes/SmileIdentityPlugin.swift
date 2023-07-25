@@ -45,7 +45,7 @@ public class SmileIdentityPluginImpl: NSObject, FlutterPlugin {
     }
 }
 
-public class SmileIdentity: NSObject {
+public class SmileIdentity: NSObject, FlutterPlugin {
     var channel: FlutterMethodChannel;
     var manager: SmileIdentityManager!;
     
@@ -53,6 +53,20 @@ public class SmileIdentity: NSObject {
         let channel = FlutterMethodChannel(name: METHOD_CHANNEL_NAME, binaryMessenger: binaryMessenger)
         self.channel = channel
         self.manager = SmileIdentityManager(channel: channel)
+    }
+
+    public init(FlutterMethodChannel: channel) {
+        self.channel = channel
+        self.manager = SmileIdentityManager(channel: channel)
+    }
+
+    public static func register(with registrar: FlutterPluginRegistrar) {
+      let channel = FlutterMethodChannel(
+        name: METHOD_CHANNEL_NAME,
+        binaryMessenger: registrar.messenger())
+
+      let instance = SmileIdentity(channel)
+      registrar.addMethodCallDelegate(instance, channel: channel)
     }
     
     public func setUpListeners() {
