@@ -54,7 +54,7 @@ public class SmileIdentity: NSObject, FlutterPlugin {
         self.channel = channel
         self.manager = SmileIdentityManager(channel: channel)
     }
-
+/* 
     public init(FlutterMethodChannel: channel) {
         self.channel = channel
         self.manager = SmileIdentityManager(channel: channel)
@@ -68,7 +68,7 @@ public class SmileIdentity: NSObject, FlutterPlugin {
       let instance = SmileIdentity(channel)
       registrar.addMethodCallDelegate(instance, channel: channel)
     }
-    
+     */
     public func setUpListeners() {
         channel.setMethodCallHandler({ [self]
             (call: FlutterMethodCall, result: @escaping FlutterResult) -> Void in
