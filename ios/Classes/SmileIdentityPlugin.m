@@ -3,6 +3,6 @@
 
 @implementation SmileIdentityPlugin
 + (void)registerWithRegistrar:(NSObject<FlutterPluginRegistrar>*)registrar {
-    [SmileIdentity registerWithRegistrar:registrar];
+    [SmileIdentityPluginImpl registerWithRegistrar:registrar];
 }
 @end
