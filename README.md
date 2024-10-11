@@ -25,6 +25,16 @@ class MainActivity : SmileIdentityMainActivity() {
 ```
 </br>
 
+3. In the `android` block in `app/build.gradle`
+
+```
+    packagingOptions {
+        exclude 'META-INF/androidx.*'
+        exclude 'androidx.*'
+        exclude 'META-INF/DEPENDENCIES'
+    }
+```
+ 
 ### iOS Set-up
 Please visit this [link](https://docs.usesmileid.com/integration-options/mobile/ios) to set up Smile Identity for iOS.
 
